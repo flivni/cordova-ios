@@ -34,6 +34,8 @@
     id <CDVCommandDelegate> _commandDelegate;
     @protected
     CDVCommandQueue* _commandQueue;
+    @protected
+    UIActivityIndicatorView* _activityView;
 }
 
 @property (nonatomic, readonly, weak) IBOutlet UIView* webView;
@@ -50,6 +52,7 @@
 @property (nonatomic, readonly, strong) CDVCommandQueue* commandQueue;
 @property (nonatomic, readonly, strong) id <CDVWebViewEngineProtocol> webViewEngine;
 @property (nonatomic, readonly, strong) id <CDVCommandDelegate> commandDelegate;
+@property (nonatomic, readonly, strong) UIActivityIndicatorView* activityView;
 
 /**
 	Takes/Gives an array of UIInterfaceOrientation (int) objects
