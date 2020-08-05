@@ -52,6 +52,7 @@
 @synthesize commandDelegate = _commandDelegate;
 @synthesize commandQueue = _commandQueue;
 @synthesize webViewEngine = _webViewEngine;
+@synthesize activityView = _activityView;
 @dynamic webView;
 
 - (void)__init
@@ -78,10 +79,29 @@
         self.supportedOrientations = [self parseInterfaceOrientations:
             [[[NSBundle mainBundle] infoDictionary] objectForKey:@"UISupportedInterfaceOrientations"]];
 
+        [self createActivityView];
+
         [self printVersion];
         [self printMultitaskingInfo];
         [self printPlatformVersionWarning];
         self.initialized = YES;
+    }
+}
+
+- (void)createActivityView
+{
+    UIActivityIndicatorViewStyle topActivityIndicatorStyle = UIActivityIndicatorViewStyleGray;
+    _activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:topActivityIndicatorStyle];
+    _activityView.center = CGPointMake(self.view.bounds.size.width / 2, self.view.bounds.size.height / 2);
+    _activityView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin
+        | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
+    [_activityView startAnimating];
+    
+    id showSplashScreenSpinnerValue = [self.commandDelegate.settings objectForKey:[@"ShowSplashScreenSpinner" lowercaseString]];
+    // backwards compatibility - if key is missing, default to true
+    if ((showSplashScreenSpinnerValue == nil) || [showSplashScreenSpinnerValue boolValue])
+    {
+        [self.view addSubview:_activityView];
     }
 }
 
@@ -798,6 +818,7 @@
 
     [UIView animateWithDuration:fadeDuration animations:^{
         [self.launchView setAlpha:(visible ? 1 : 0)];
+        [self.activityView setAlpha:(visible ? 1 : 0)];
     }];
 }
 
@@ -814,6 +835,8 @@
     [self.pluginObjects removeAllObjects];
     [self.webView removeFromSuperview];
     self.webViewEngine = nil;
+    [_activityView removeFromSuperview];
+    _activityView = nil;
 }
 
 @end
