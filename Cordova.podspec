@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/apache/cordova-ios"
   s.license      = { :type => "Apache 2.0", :file => "LICENSE" }
   s.author       = "Apache Software Foundation"
-  s.platform     = :ios, "11.0"
+  s.platform     = :ios, "13.0"
   s.source       = relSource
   s.requires_arc = true
   s.preserve_paths = 'CordovaLib/cordova.js', 'CordovaLib/VERSION'
@@ -46,7 +46,7 @@ Pod::Spec.new do |s|
 end
 
 #
-# ATTENTION: 
+# ATTENTION:
 #
 # This file needs to be updated manually whenever a Cordova upgrade that bumps up min version of iOS is performed.
 # The release version number and the list of public headers are automatically updated through scipts.
