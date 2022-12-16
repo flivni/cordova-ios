@@ -80,7 +80,7 @@
             [[[NSBundle mainBundle] infoDictionary] objectForKey:@"UISupportedInterfaceOrientations"]];
 
         [self createActivityView];
-        
+
         [self printVersion];
         [self printMultitaskingInfo];
         [self printPlatformVersionWarning];
@@ -96,7 +96,7 @@
     _activityView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin
         | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
     [_activityView startAnimating];
-    
+
     id showSplashScreenSpinnerValue = [self.commandDelegate.settings objectForKey:[@"ShowSplashScreenSpinner" lowercaseString]];
     // backwards compatibility - if key is missing, default to true
     if ((showSplashScreenSpinnerValue == nil) || [showSplashScreenSpinnerValue boolValue])
@@ -816,10 +816,9 @@
     // AnimateWithDuration takes seconds but cordova documentation specifies milliseconds
     CGFloat fadeDuration = fadeSplashScreenDuration/1000;
 
-        [UIView animateWithDuration:fadeDuration animations:^{
-            [self.launchView setAlpha:(visible ? 1 : 0)];
-            [self.activityView setAlpha:(visible ? 1 : 0)];
-        }];
+    [UIView animateWithDuration:fadeDuration animations:^{
+        [self.launchView setAlpha:(visible ? 1 : 0)];
+        [self.activityView setAlpha:(visible ? 1 : 0)];
     }];
 }
 
