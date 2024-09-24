@@ -18,8 +18,8 @@
  */
 
 #import <Cordova/CDVPlugin.h>
-#import "CDVPlugin+Private.h"
 #import <Cordova/CDVPlugin+Resources.h>
+#import "CDVPlugin+Private.h"
 #import <Cordova/CDVViewController.h>
 #include <objc/message.h>
 
@@ -40,17 +40,17 @@
 
 @end
 
-NSString* const CDVPageDidLoadNotification = @"CDVPageDidLoadNotification";
-NSString* const CDVPluginHandleOpenURLNotification = @"CDVPluginHandleOpenURLNotification";
-NSString* const CDVPluginHandleOpenURLWithAppSourceAndAnnotationNotification = @"CDVPluginHandleOpenURLWithAppSourceAndAnnotationNotification";
-NSString* const CDVPluginResetNotification = @"CDVPluginResetNotification";
-NSString* const CDVViewWillAppearNotification = @"CDVViewWillAppearNotification";
-NSString* const CDVViewDidAppearNotification = @"CDVViewDidAppearNotification";
-NSString* const CDVViewWillDisappearNotification = @"CDVViewWillDisappearNotification";
-NSString* const CDVViewDidDisappearNotification = @"CDVViewDidDisappearNotification";
-NSString* const CDVViewWillLayoutSubviewsNotification = @"CDVViewWillLayoutSubviewsNotification";
-NSString* const CDVViewDidLayoutSubviewsNotification = @"CDVViewDidLayoutSubviewsNotification";
-NSString* const CDVViewWillTransitionToSizeNotification = @"CDVViewWillTransitionToSizeNotification";
+const NSNotificationName CDVPageDidLoadNotification = @"CDVPageDidLoadNotification";
+const NSNotificationName CDVPluginHandleOpenURLNotification = @"CDVPluginHandleOpenURLNotification";
+const NSNotificationName CDVPluginHandleOpenURLWithAppSourceAndAnnotationNotification = @"CDVPluginHandleOpenURLWithAppSourceAndAnnotationNotification";
+const NSNotificationName CDVPluginResetNotification = @"CDVPluginResetNotification";
+const NSNotificationName CDVViewWillAppearNotification = @"CDVViewWillAppearNotification";
+const NSNotificationName CDVViewDidAppearNotification = @"CDVViewDidAppearNotification";
+const NSNotificationName CDVViewWillDisappearNotification = @"CDVViewWillDisappearNotification";
+const NSNotificationName CDVViewDidDisappearNotification = @"CDVViewDidDisappearNotification";
+const NSNotificationName CDVViewWillLayoutSubviewsNotification = @"CDVViewWillLayoutSubviewsNotification";
+const NSNotificationName CDVViewDidLayoutSubviewsNotification = @"CDVViewDidLayoutSubviewsNotification";
+const NSNotificationName CDVViewWillTransitionToSizeNotification = @"CDVViewWillTransitionToSizeNotification";
 
 @interface CDVPlugin ()
 
@@ -71,8 +71,12 @@ NSString* const CDVViewWillTransitionToSizeNotification = @"CDVViewWillTransitio
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppTerminate) name:UIApplicationWillTerminateNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMemoryWarning) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleOpenURL:) name:CDVPluginHandleOpenURLNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleOpenURLWithApplicationSourceAndAnnotation:) name:CDVPluginHandleOpenURLWithAppSourceAndAnnotationNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onReset) name:CDVPluginResetNotification object:theWebViewEngine.engineWebView];
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleOpenURLWithApplicationSourceAndAnnotation:) name:CDVPluginHandleOpenURLWithAppSourceAndAnnotationNotification object:nil];
+#pragma clang diagnostic pop
 
         self.webViewEngine = theWebViewEngine;
     }

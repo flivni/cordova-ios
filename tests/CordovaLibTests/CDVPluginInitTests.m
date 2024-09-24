@@ -18,7 +18,7 @@
  */
 
 #import <XCTest/XCTest.h>
-#import <Cordova/CDV.h>
+#import <Cordova/Cordova.h>
 #import "AppDelegate.h"
 
 @interface CDVPluginInitTests : XCTestCase
@@ -38,9 +38,9 @@
     // uncaught and the app crashes upon a failed STAssert (oh well).
     // [self raiseAfterFailure];
 
-    self.appDelegate = [[UIApplication sharedApplication] delegate];
+    self.appDelegate = (AppDelegate*)[[UIApplication sharedApplication] delegate];
     [self.appDelegate createViewController];
-    self.viewController = self.appDelegate.viewController;
+    self.viewController = self.appDelegate.testViewController;
 }
 
 - (void)tearDown

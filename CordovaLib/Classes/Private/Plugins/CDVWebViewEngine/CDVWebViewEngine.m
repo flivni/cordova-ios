@@ -19,14 +19,13 @@
 
 #import "CDVWebViewEngine.h"
 #import "CDVWebViewUIDelegate.h"
+#import "CDVURLSchemeHandler.h"
 #import <Cordova/CDVWebViewProcessPoolFactory.h>
-#import <Cordova/NSDictionary+CordovaPreferences.h>
-#import <Cordova/CDVURLSchemeHandler.h>
+#import <Cordova/CDVSettingsDictionary.h>
 
 #import <objc/message.h>
 
 #define CDV_BRIDGE_NAME @"cordova"
-#define CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR @"loadFileURL:allowingReadAccessToURL:"
 
 @interface CDVWebViewWeakScriptMessageHandler : NSObject <WKScriptMessageHandler>
 
@@ -76,7 +75,7 @@
     return [self initWithFrame:frame configuration:nil];
 }
 
-- (WKWebViewConfiguration*) createConfigurationFromSettings:(NSDictionary*)settings
+- (WKWebViewConfiguration*) createConfigurationFromSettings:(CDVSettingsDictionary*)settings
 {
     WKWebViewConfiguration* configuration;
     if (_configuration) {
@@ -148,14 +147,11 @@
     }
     configuration.applicationNameForUserAgent = userAgent;
 
-    if (@available(iOS 13.0, *)) {
-        NSString *contentMode = [settings cordovaSettingForKey:@"PreferredContentMode"];
-        if ([contentMode isEqual: @"mobile"]) {
-            configuration.defaultWebpagePreferences.preferredContentMode = WKContentModeMobile;
-        } else if ([contentMode isEqual: @"desktop"]) {
-            configuration.defaultWebpagePreferences.preferredContentMode = WKContentModeDesktop;
-        }
-        
+    NSString *contentMode = [settings cordovaSettingForKey:@"PreferredContentMode"];
+    if ([contentMode isEqual: @"mobile"]) {
+        configuration.defaultWebpagePreferences.preferredContentMode = WKContentModeMobile;
+    } else if ([contentMode isEqual: @"desktop"]) {
+        configuration.defaultWebpagePreferences.preferredContentMode = WKContentModeDesktop;
     }
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000
@@ -169,21 +165,19 @@
 
 - (void)pluginInitialize
 {
-    // viewController would be available now. we attempt to set all possible delegates to it, by default
-    CDVViewController* vc = (CDVViewController*)self.viewController;
-    NSDictionary* settings = self.commandDelegate.settings;
+    CDVSettingsDictionary* settings = self.commandDelegate.settings;
 
-    NSString *scheme = [settings cordovaSettingForKey:@"scheme"];
+    NSString *scheme = self.viewController.appScheme;
 
     // If scheme is file or nil, then default to file scheme
-    self.cdvIsFileScheme = [scheme isEqualToString: @"file"] || scheme == nil;
+    self.cdvIsFileScheme = [scheme isEqualToString:@"file"] || scheme == nil;
 
     NSString *hostname = @"";
     if(!self.cdvIsFileScheme) {
         if(scheme == nil || [WKWebView handlesURLScheme:scheme]){
             scheme = @"app";
+            self.viewController.appScheme = scheme;
         }
-        vc.appScheme = scheme;
 
         hostname = [settings cordovaSettingForKey:@"hostname"];
         if(hostname == nil){
@@ -193,7 +187,8 @@
         self.CDV_ASSETS_URL = [NSString stringWithFormat:@"%@://%@", scheme, hostname];
     }
 
-    CDVWebViewUIDelegate* uiDelegate = [[CDVWebViewUIDelegate alloc] initWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]];
+    CDVWebViewUIDelegate* uiDelegate = [[CDVWebViewUIDelegate alloc] initWithViewController:self.viewController];
+    uiDelegate.title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
     uiDelegate.allowNewWindows = [settings cordovaBoolSettingForKey:@"AllowNewWindows" defaultValue:NO];
     self.uiDelegate = uiDelegate;
 
@@ -216,7 +211,7 @@
 
     // Do not configure the scheme handler if the scheme is default (file)
     if(!self.cdvIsFileScheme) {
-        self.schemeHandler = [[CDVURLSchemeHandler alloc] initWithVC:vc];
+        self.schemeHandler = [[CDVURLSchemeHandler alloc] initWithViewController:self.viewController];
         [configuration setURLSchemeHandler:self.schemeHandler forURLScheme:scheme];
     }
 
@@ -272,32 +267,14 @@
                name:UIApplicationWillEnterForegroundNotification object:nil];
 
     NSLog(@"Using WKWebView");
-
-    [self addURLObserver];
 }
 
-- (void)onReset {
-    [self addURLObserver];
-}
-
-static void * KVOContext = &KVOContext;
-
-- (void)addURLObserver {
-    if(!IsAtLeastiOSVersion(@"9.0")){
-        [self.webView addObserver:self forKeyPath:@"URL" options:0 context:KVOContext];
-    }
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
+- (void)dispose
 {
-    if (context == KVOContext) {
-        if (object == [self webView] && [keyPath isEqualToString: @"URL"] && [object valueForKeyPath:keyPath] == nil){
-            NSLog(@"URL is nil. Reloading WKWebView");
-            [(WKWebView*)_engineWebView reload];
-        }
-    } else {
-        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-    }
+    WKWebView* wkWebView = (WKWebView*)_engineWebView;
+    [wkWebView.configuration.userContentController removeScriptMessageHandlerForName:CDV_BRIDGE_NAME];
+
+    [super dispose];
 }
 
 - (void) onAppWillEnterForeground:(NSNotification*)notification {
@@ -381,18 +358,10 @@ static void * KVOContext = &KVOContext;
 
 - (BOOL) canLoadRequest:(NSURLRequest*)request
 {
-    // See: https://issues.apache.org/jira/browse/CB-9636
-    SEL wk_sel = NSSelectorFromString(CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR);
-
-    // if it's a file URL, check whether WKWebView has the selector (which is in iOS 9 and up only)
-    if (request.URL.fileURL) {
-        return [_engineWebView respondsToSelector:wk_sel];
-    } else {
-        return YES;
-    }
+    return YES;
 }
 
-- (void)updateSettings:(NSDictionary*)settings
+- (void)updateSettings:(CDVSettingsDictionary*)settings
 {
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
 
@@ -437,7 +406,7 @@ static void * KVOContext = &KVOContext;
 - (void)updateWithInfo:(NSDictionary*)info
 {
     NSDictionary* scriptMessageHandlers = [info objectForKey:kCDVWebViewEngineScriptMessageHandlers];
-    NSDictionary* settings = [info objectForKey:kCDVWebViewEngineWebViewPreferences];
+    id settings = [info objectForKey:kCDVWebViewEngineWebViewPreferences];
     id navigationDelegate = [info objectForKey:kCDVWebViewEngineWKNavigationDelegate];
     id uiDelegate = [info objectForKey:kCDVWebViewEngineWKUIDelegate];
 
@@ -462,8 +431,10 @@ static void * KVOContext = &KVOContext;
         wkWebView.UIDelegate = uiDelegate;
     }
 
-    if (settings && [settings isKindOfClass:[NSDictionary class]]) {
+    if (settings && [settings isKindOfClass:[CDVSettingsDictionary class]]) {
         [self updateSettings:settings];
+    } else if (settings && [settings isKindOfClass:[NSDictionary class]]) {
+        [self updateSettings:[[CDVSettingsDictionary alloc] initWithDictionary:settings]];
     }
 }
 
@@ -536,17 +507,17 @@ static void * KVOContext = &KVOContext;
 
 - (void)webView:(WKWebView*)theWebView didFailNavigation:(WKNavigation*)navigation withError:(NSError*)error
 {
-    CDVViewController* vc = (CDVViewController*)self.viewController;
-
     NSString* message = [NSString stringWithFormat:@"Failed to load webpage with error: %@", [error localizedDescription]];
     NSLog(@"%@", message);
 
-    NSURL* errorUrl = vc.errorURL;
-    if (errorUrl) {
-        NSCharacterSet *charSet = [NSCharacterSet URLFragmentAllowedCharacterSet];
-        errorUrl = [NSURL URLWithString:[NSString stringWithFormat:@"?error=%@", [message stringByAddingPercentEncodingWithAllowedCharacters:charSet]] relativeToURL:errorUrl];
-        NSLog(@"%@", [errorUrl absoluteString]);
-        [theWebView loadRequest:[NSURLRequest requestWithURL:errorUrl]];
+    if (error.code != NSURLErrorCancelled) {
+        NSURL* errorUrl = self.viewController.errorURL;
+        if (errorUrl) {
+            NSCharacterSet *charSet = [NSCharacterSet URLFragmentAllowedCharacterSet];
+            errorUrl = [NSURL URLWithString:[NSString stringWithFormat:@"?error=%@", [message stringByAddingPercentEncodingWithAllowedCharacters:charSet]] relativeToURL:errorUrl];
+            NSLog(@"%@", [errorUrl absoluteString]);
+            [theWebView loadRequest:[NSURLRequest requestWithURL:errorUrl]];
+        }
     }
 }
 
@@ -576,8 +547,7 @@ static void * KVOContext = &KVOContext;
     BOOL anyPluginsResponded = NO;
     BOOL shouldAllowRequest = NO;
 
-    for (NSString* pluginName in vc.pluginObjects) {
-        CDVPlugin* plugin = [vc.pluginObjects objectForKey:pluginName];
+    for (CDVPlugin *plugin in vc.enumerablePlugins) {
         SEL selector = NSSelectorFromString(@"shouldOverrideLoadWithRequest:navigationType:");
         if ([plugin respondsToSelector:selector]) {
             anyPluginsResponded = YES;

@@ -22,6 +22,45 @@
 
 Cordova is a static library that enables developers to include the Cordova API in their iOS application projects easily, and also create new Cordova-based iOS application projects through the command-line.
 
+### 7.1.1 (Jul 19, 2024)
+
+**Fixes:**
+
+* [GH-1446](https://github.com/apache/cordova-ios/pull/1446) fix: uninstall plugin with `asset` tag
+* [GH-1435](https://github.com/apache/cordova-ios/pull/1435) fix: Fix version checking helper scripts
+* [GH-1436](https://github.com/apache/cordova-ios/pull/1436) fix: Properly set the webview config when it is provided
+* [GH-1438](https://github.com/apache/cordova-ios/pull/1438) fix: Set CodeSigning Entitlements in Xcode Project at Target level
+
+**Others:**
+
+* [GH-1426](https://github.com/apache/cordova-ios/pull/1426) chore: Update CordovaLib.xcodeproj fixture
+* [GH-1419](https://github.com/apache/cordova-ios/pull/1419) ci: update codecov@v4 w/ token
+
+### 7.1.0 (Apr 01, 2024)
+
+**Features:**
+
+* [GH-1411](https://github.com/apache/cordova-ios/pull/1411) feat: `SplashScreenBackgroundColor` preference support
+* [GH-1406](https://github.com/apache/cordova-ios/pull/1406) feat: add `privacy-manifest` config support
+* [GH-1383](https://github.com/apache/cordova-ios/pull/1383) feat: add PrivacyInfo.xcprivacy for CordovaLib & app template
+
+**Fixes:**
+
+* [GH-1405](https://github.com/apache/cordova-ios/pull/1405) fix: use `PROVISIONING_PROFILE_SPECIFIER` for manual codesigning
+* [GH-1374](https://github.com/apache/cordova-ios/pull/1374) fix: WASM MIME type error by specifying it in Info.plist template
+
+**Chores:**
+
+* [GH-1413](https://github.com/apache/cordova-ios/pull/1413) chore(deps): Modernize some dependencies
+* [GH-1404](https://github.com/apache/cordova-ios/pull/1404) chore: update package & package-lock
+* [GH-1382](https://github.com/apache/cordova-ios/pull/1382) chore(deps-dev): bump `@babel/traverse` from 7.21.4 to 7.23.2
+* [GH-1380](https://github.com/apache/cordova-ios/pull/1380) chore: Update Slack signup link in SUPPORT_QUESTION.md
+
+**CI:**
+
+* [GH-1412](https://github.com/apache/cordova-ios/pull/1412) ci: Fix ObjC testing with latest Xcode
+* [GH-1408](https://github.com/apache/cordova-ios/pull/1408) ci(gh-action): add Apache RAT & package license checker workflow w/ license header additions
+
 ### 7.0.1 (Sep 03, 2023)
 
 * [GH-1369](https://github.com/apache/cordova-ios/pull/1369) fix: `xcodebuild` version check to 11

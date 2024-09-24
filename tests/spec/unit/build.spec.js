@@ -17,8 +17,8 @@
  under the License.
  */
 
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const path = require('node:path');
 const rewire = require('rewire');
 const { CordovaError, events } = require('cordova-common');
 const build = rewire('../../../lib/build');
@@ -225,6 +225,27 @@ describe('build', () => {
             ]);
             expect(args.length).toEqual(18);
         });
+
+        it('should generate appropriate args for Catalyst macOS builds', () => {
+            const buildOpts = {
+                catalyst: true
+            };
+
+            const args = getXcodeBuildArgs('TestProjectName', testProjectPath, 'TestConfiguration', '', buildOpts);
+            expect(args).toEqual([
+                '-workspace',
+                'TestProjectName.xcworkspace',
+                '-scheme',
+                'TestProjectName',
+                '-configuration',
+                'TestConfiguration',
+                '-destination',
+                'generic/platform=macOS,variant=Mac Catalyst',
+                'build',
+                `SYMROOT=${path.join(testProjectPath, 'build')}`
+            ]);
+            expect(args.length).toEqual(10);
+        });
     });
 
     describe('getXcodeArchiveArgs method', () => {
@@ -353,35 +374,22 @@ describe('build', () => {
     });
 
     describe('run method', () => {
-        beforeEach(() => {
-            spyOn(Promise, 'reject');
-        });
-
         it('should not accept debug and release options together', () => {
-            build.run({
-                debug: true,
-                release: true
-            });
-
-            expect(Promise.reject).toHaveBeenCalledWith(new CordovaError('Cannot specify "debug" and "release" options together.'));
+            return expectAsync(build.run({ debug: true, release: true }))
+                .toBeRejectedWithError(CordovaError, 'Cannot specify "debug" and "release" options together.');
         });
 
         it('should not accept device and emulator options together', () => {
-            build.run({
-                device: true,
-                emulator: true
-            });
-
-            expect(Promise.reject).toHaveBeenCalledWith(new CordovaError('Cannot specify "device" and "emulator" options together.'));
+            return expectAsync(build.run({ device: true, emulator: true }))
+                .toBeRejectedWithError(CordovaError, 'Cannot specify "device" and "emulator" options together.');
         });
 
         it('should reject when build config file missing', () => {
             spyOn(fs, 'existsSync').and.returnValue(false);
-
             const buildConfig = './some/config/path';
-            build.run({ buildConfig: './some/config/path' });
 
-            expect(Promise.reject).toHaveBeenCalledWith(new CordovaError(`Build config file does not exist: ${buildConfig}`));
+            return expectAsync(build.run({ buildConfig: './some/config/path' }))
+                .toBeRejectedWithError(CordovaError, `Build config file does not exist: ${buildConfig}`);
         });
     });
 
@@ -416,6 +424,21 @@ describe('build', () => {
                     identifier: 'com.apple.CoreSimulator.SimDeviceType.iPhone-X',
                     simIdentifier: 'iPhone-X'
                 });
+            });
+        });
+
+        it('should handle the case of no simulators being available', () => {
+            // This method will require a module that supports the run method.
+            build.__set__('require', () => ({
+                run: () => Promise.resolve([])
+            }));
+
+            const getDefaultSimulatorTarget = build.__get__('getDefaultSimulatorTarget');
+
+            return getDefaultSimulatorTarget().then(sim => {
+                return Promise.reject(new Error('Should not resolve if no simulators are present'));
+            }, (err) => {
+                expect(err).toBeInstanceOf(CordovaError);
             });
         });
     });

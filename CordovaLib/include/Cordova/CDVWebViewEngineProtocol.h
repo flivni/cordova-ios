@@ -18,12 +18,13 @@
  */
 
 #import <UIKit/UIKit.h>
-#import <WebKit/WebKit.h>
 
 #define kCDVWebViewEngineScriptMessageHandlers @"kCDVWebViewEngineScriptMessageHandlers"
 #define kCDVWebViewEngineWKNavigationDelegate @"kCDVWebViewEngineWKNavigationDelegate"
 #define kCDVWebViewEngineWKUIDelegate @"kCDVWebViewEngineWKUIDelegate"
 #define kCDVWebViewEngineWebViewPreferences @"kCDVWebViewEngineWebViewPreferences"
+
+@class WKWebViewConfiguration;
 
 @protocol CDVWebViewEngineProtocol <NSObject>
 
@@ -47,5 +48,24 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)updateWithInfo:(NSDictionary*)info;
 
 NS_ASSUME_NONNULL_END
+
+@end
+
+
+@protocol CDVWebViewEngineConfigurationDelegate <NSObject>
+
+@optional
+/// Provides a fully configured WKWebViewConfiguration which will be overriden with
+/// any related settings you add to config.xml (e.g., `PreferredContentMode`).
+/// Useful for more complex configuration, including websiteDataStore.
+///
+/// Example usage:
+///
+/// extension CDVViewController: CDVWebViewEngineConfigurationDelegate {
+///     public func configuration() -> WKWebViewConfiguration {
+///         // return your config here
+///     }
+/// }
+- (nonnull WKWebViewConfiguration*)configuration;
 
 @end
